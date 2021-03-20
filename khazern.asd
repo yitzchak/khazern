@@ -8,7 +8,9 @@
     ((:module lisp
       :serial t
       :components
-        ((:file "packages"))))
+        ((:file "packages")
+         (:file "interface")
+         (:file "deque"))))
   . #+asdf3
       (:version "0.1"
        :bug-tracker "https://github.com/yitzchak/khazern/issues")
