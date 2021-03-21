@@ -2,34 +2,52 @@
 
 
 (defun make-do (base decls end-form body)
-  (let ((iter-vars (mapcar (lambda (decl &aux (step-form (third decl)))
-                             (when (keywordp step-form)
+  (let ((gen-vars (mapcar (lambda (decl &aux (var (first decl))
+                                             (step-form (third decl)))
+                             (when (or (listp var) ; create gensyms for all the iteration or multiple value declarations.
+                                       (keywordp step-form))
                                (gensym)))
                            decls)))
-    `(symbol-macrolet ,(mapcan (lambda (decl iter-var &aux (var (first decl)) (step-form (third decl)))
-                                 (when (keywordp step-form)
-                                   (let ((iter-func (if (tail-iterator-p step-form) 'tail 'head)))
-                                     (if (listp var)
-                                       (loop for sub in var
-                                             for index from 0
-                                             collect `(,sub (,iter-func ,iter-var ,index)))
-                                       `((,var (,iter-func ,iter-var)))))))
+    `(symbol-macrolet ,(mapcan (lambda (decl gen-var &aux (var (first decl))
+                                                          (step-form (third decl)))
+                                 (cond
+                                   ((keywordp step-form) ; For the iteration declarations make a symbol macro that binds to head/tail
+                                     (let ((iter-func (if (tail-iterator-p step-form) 'tail 'head)))
+                                       (if (listp var)
+                                         (loop for sub in var
+                                               for index from 0
+                                               collect `(,sub (,iter-func ,gen-var ,index)))
+                                         `((,var (,iter-func ,gen-var))))))
+                                   (gen-var ; For the multiple value declarations make a symbol macro that binds to nth
+                                     (loop for sub in var
+                                           for index from 0
+                                           collect `(,sub (nth ,index ,gen-var))))))
                                 decls
-                                iter-vars)
-       (,base ,(mapcar (lambda (decl iter-var &aux (init-form (second decl)) (step-form (third decl)))
-                         (if (keywordp step-form)
-                           `(,iter-var (make-iterator ,init-form ,step-form)
-                                       (progn
-                                         (,(if (tail-iterator-p step-form) 'pop-tail 'pop-head) ,iter-var)
-                                         ,iter-var))
-                            decl))
+                                gen-vars)
+       (,base ,(mapcar (lambda (decl gen-var &aux (var (first decl))
+                                                  (init-form (second decl))
+                                                  (step-form (third decl)))
+                         (cond
+                           ((keywordp step-form) ; iteration declaration
+                             `(,gen-var (make-iterator ,init-form ,step-form)
+                                        (progn
+                                          (,(if (tail-iterator-p step-form) 'pop-tail 'pop-head) ,gen-var)
+                                          ,gen-var)))
+                           ((and gen-var
+                                 (cddr decl)) ; multiple value declation with a step form
+                             `(,gen-var (multiple-value-list ,init-form) (multiple-value-list ,step-form)))
+                           (gen-var ; multiple value declation with no step form
+                             `(,gen-var (multiple-value-list ,init-form)))
+                           (t ; normal declaration
+                             decl)))
                        decls
-                       iter-vars)
+                       gen-vars)
               ((or ,(first end-form)
-                   ,@(mapcan (lambda (iter-var)
-                               (when iter-var
-                                 `((emptyp ,iter-var))))
-                              iter-vars))
+                   ,@(mapcan (lambda (decl gen-var &aux (step-form (third decl)))
+                               (when (keywordp step-form)
+                                 `((emptyp ,gen-var))))
+                              decls
+                              gen-vars))
                ,@(cdr end-form))
             ,@body))))
 
