@@ -12,7 +12,7 @@
          (:file "interface")
          (:file "deque")
          (:file "list")
-         (:file "repeat"))))
+         (:file "do"))))
   . #+asdf3
       (:version "0.1"
        :bug-tracker "https://github.com/yitzchak/khazern/issues")
