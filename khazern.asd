@@ -10,7 +10,9 @@
       :components
         ((:file "packages")
          (:file "interface")
-         (:file "deque"))))
+         (:file "deque")
+         (:file "list")
+         (:file "repeat"))))
   . #+asdf3
       (:version "0.1"
        :bug-tracker "https://github.com/yitzchak/khazern/issues")

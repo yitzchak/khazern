@@ -16,10 +16,13 @@
      :initform nil)))
 
 
-(defmethod push-head ((instance deque) new-value)
+(defmethod push-head ((instance deque) &rest new-values)
+  (assert (= 1 (length new-values))
+          (new-values)
+    "Only one value is permitted to be pushed into a deque.")
   (with-slots (head-item tail-item)
               instance
-    (let ((new-item (make-deque-item :value new-value :next head-item)))
+    (let ((new-item (make-deque-item :value (car new-values) :next head-item)))
       (when head-item
         (setf (deque-item-previous head-item) new-item))
       (setf head-item new-item)
@@ -28,7 +31,10 @@
       instance)))
 
 
-(defmethod pop-head ((instance deque))
+(defmethod pop-head ((instance deque) &optional index)
+  (assert (null index)
+          (index)
+    "Only one value is permitted to be pushed into a deque hence a non-null index is meaningless.")
   (with-slots (head-item tail-item)
               instance
     (if head-item
@@ -41,10 +47,13 @@
       (values nil nil))))
 
 
-(defmethod push-tail ((instance deque) new-value)
+(defmethod push-tail ((instance deque) &rest new-values)
+  (assert (= 1 (length new-values))
+          (new-values)
+    "Only one value is permitted to be pushed into a deque.")
   (with-slots (head-item tail-item)
               instance
-    (let ((new-item (make-deque-item :value new-value :previous tail-item)))
+    (let ((new-item (make-deque-item :value (car new-values) :previous tail-item)))
       (when tail-item
         (setf (deque-item-next tail-item) new-item))
       (setf tail-item new-item)
@@ -53,7 +62,10 @@
       instance)))
 
 
-(defmethod pop-tail ((instance deque))
+(defmethod pop-tail ((instance deque) &optional index)
+  (assert (null index)
+          (index)
+    "Only one value is permitted to be pushed into a deque hence a non-null index is meaningless.")
   (with-slots (head-item tail-item)
               instance
     (if tail-item
@@ -66,7 +78,10 @@
       (values nil nil))))
 
 
-(defmethod head ((instance deque))
+(defmethod head ((instance deque) &optional index)
+  (assert (null index)
+          (index)
+    "Only one value is permitted to be pushed into a deque hence a non-null index is meaningless.")
   (with-slots (head-item)
               instance
     (if head-item
@@ -74,7 +89,10 @@
       (values nil nil))))
 
 
-(defmethod (setf head) (new-value (instance deque))
+(defmethod (setf head) (new-value (instance deque) &optional index)
+  (assert (null index)
+          (index)
+    "Only one value is permitted to be pushed into a deque hence a non-null index is meaningless.")
   (with-slots (head-item)
               instance
     (unless head-item
@@ -82,7 +100,10 @@
     (setf (deque-item-value head-item) new-value)))
 
 
-(defmethod tail ((instance deque))
+(defmethod tail ((instance deque) &optional index)
+  (assert (null index)
+          (index)
+    "Only one value is permitted to be pushed into a deque hence a non-null index is meaningless.")
   (with-slots (tail-item)
               instance
     (if tail-item
@@ -90,7 +111,10 @@
       (values nil nil))))
 
 
-(defmethod (setf tail) (new-value (instance deque))
+(defmethod (setf tail) (new-value (instance deque) &optional index)
+  (assert (null index)
+          (index)
+    "Only one value is permitted to be pushed into a deque hence a non-null index is meaningless.")
   (with-slots (tail-item)
               instance
     (unless tail-item

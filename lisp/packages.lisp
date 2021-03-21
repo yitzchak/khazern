@@ -3,10 +3,12 @@
   (:documentation "Looping, accumulation and deques.")
   (:export
     #:deque
-    #:push-head
-    #:pop-head
-    #:push-tail
-    #:pop-tail
+    #:emptyp
     #:head
-    #:tail
-    #:emptyp))
+    #:pop-head
+    #:pop-tail
+    #:push-head
+    #:push-tail
+    #:repeat
+    #:tail))
+
