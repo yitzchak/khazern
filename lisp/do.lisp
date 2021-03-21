@@ -2,38 +2,27 @@
 
 
 (defun make-do (base decls end-form body)
-  (let ((iter-vars (mapcar (lambda (decl)
-                             (when (member (second decl) '(:pop-head :pop-tail :from-head :from-tail))
+  (let ((iter-vars (mapcar (lambda (decl &aux (step-form (third decl)))
+                             (when (keywordp step-form)
                                (gensym)))
                            decls)))
-    `(symbol-macrolet ,(mapcan (lambda (decl iter-var)
-                                 (case (second decl)
-                                   ((:pop-head :from-head)
-                                     (if (listp (first decl))
-                                       (loop for sub in (first decl)
+    `(symbol-macrolet ,(mapcan (lambda (decl iter-var &aux (var (first decl)) (step-form (third decl)))
+                                 (when (keywordp step-form)
+                                   (let ((iter-func (if (tail-iterator-p step-form) 'tail 'head)))
+                                     (if (listp var)
+                                       (loop for sub in var
                                              for index from 0
-                                             collect `(,sub (head ,iter-var ,index)))
-                                       `((,(first decl) (head ,iter-var)))))
-                                   ((:pop-tail :from-tail)
-                                     (if (listp (first decl))
-                                       (loop for sub in (first decl)
-                                             for index from 0
-                                             collect `(,sub (tail ,iter-var ,index)))
-                                       `((,(first decl) (tail ,iter-var)))))))
+                                             collect `(,sub (,iter-func ,iter-var ,index)))
+                                       `((,var (,iter-func ,iter-var)))))))
                                 decls
                                 iter-vars)
-       (,base ,(mapcar (lambda (decl iter-var)
-                         (case (second decl)
-                           (:pop-head
-                             `(,iter-var ,(third decl) (progn (pop-head ,iter-var) ,iter-var)))
-                           (:pop-tail
-                             `(,iter-var ,(third decl) (progn (pop-tail ,iter-var) ,iter-var)))
-                           (:from-head
-                             `(,iter-var (make-iterator ,(third decl) :head t ,@(cdddr decl)) (progn (pop-head ,iter-var) ,iter-var)))
-                           (:from-tail
-                             `(,iter-var (make-iterator ,(third decl) :tail t ,@(cdddr decl)) (progn (pop-tail ,iter-var) ,iter-var)))
-                           (otherwise
-                             decl)))
+       (,base ,(mapcar (lambda (decl iter-var &aux (init-form (second decl)) (step-form (third decl)))
+                         (if (keywordp step-form)
+                           `(,iter-var (make-iterator ,init-form ,step-form)
+                                       (progn
+                                         (,(if (tail-iterator-p step-form) 'pop-tail 'pop-head) ,iter-var)
+                                         ,iter-var))
+                            decl))
                        decls
                        iter-vars)
               ((or ,(first end-form)

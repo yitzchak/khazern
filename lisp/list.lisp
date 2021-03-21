@@ -178,13 +178,15 @@
   (null (head-cons instance)))
 
 
-(defmethod make-iterator ((instance list) &rest initargs &key head tail &allow-other-keys)
-  (when tail
-    (error "No tail iterator for lists"))
-  (make-instance (ecase (getf initargs :type :list)
-                   (:list 'list-iterator)
-                   (:plist 'plist-iterator))
-                 :head-cons instance))
+(defmethod make-iterator ((instance list) (type (eql :list)))
+  (make-instance 'list-iterator :head-cons instance))
 
+
+(defmethod make-iterator ((instance list) (type (eql :alist)))
+  (make-instance 'alist-iterator :head-cons instance))
+
+
+(defmethod make-iterator ((instance list) (type (eql :plist)))
+  (make-instance 'plist-iterator :head-cons instance))
 
 

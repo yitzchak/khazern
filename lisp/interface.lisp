@@ -28,5 +28,20 @@
 (defgeneric emptyp (instance))
 
 
-(defgeneric make-iterator (instance &rest initargs &key head tail &allow-other-keys))
+(defgeneric make-iterator (instance type)
+  (:method (instance (type (eql :head)))
+    (declare (ignore type))
+    instance)
+  (:method (instance (type (eql :tail)))
+    (declare (ignore type))
+    instance))
+
+
+(defgeneric tail-iterator-p (type)
+  (:method (type)
+    (declare (ignore type))
+    nil)
+  (:method ((type (eql :tail)))
+    (declare (ignore type))
+    t))
 
