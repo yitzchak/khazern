@@ -13,6 +13,7 @@
          (:file "deque")
          (:file "list")
          (:file "vector")
+         (:file "stream")
          (:file "do"))))
   . #+asdf3
       (:version "0.1"
