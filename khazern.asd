@@ -12,6 +12,7 @@
          (:file "interface")
          (:file "deque")
          (:file "list")
+         (:file "vector")
          (:file "do"))))
   . #+asdf3
       (:version "0.1"

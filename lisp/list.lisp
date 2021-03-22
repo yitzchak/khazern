@@ -1,14 +1,14 @@
 (in-package :khazern)
 
 
-(defclass list-iterator ()
+(defclass list-value-iterator ()
   ((head-cons
      :accessor head-cons
      :initarg :head-cons
      :initform nil)))
 
 
-(defmethod pop-head ((instance list-iterator) &optional index)
+(defmethod pop-head ((instance list-value-iterator) &optional index)
   (with-slots (head-cons)
               instance
     (if head-cons
@@ -16,7 +16,7 @@
       (values nil nil))))
 
 
-(defmethod head ((instance list-iterator) &optional index)
+(defmethod head ((instance list-value-iterator) &optional index)
   (with-slots (head-cons)
               instance
     (if head-cons
@@ -24,7 +24,7 @@
       (values nil nil))))
 
 
-(defmethod (setf head) (new-value (instance list-iterator) &optional index)
+(defmethod (setf head) (new-value (instance list-value-iterator) &optional index)
   (with-slots (head-cons)
               instance
     (unless head-cons
@@ -32,18 +32,67 @@
     (setf (car head-cons) new-value)))
 
 
-(defmethod emptyp ((instance list-iterator))
+(defmethod emptyp ((instance list-value-iterator))
   (null (head-cons instance)))
 
 
-(defclass plist-iterator ()
+(defclass list-key-value-iterator (list-value-iterator)
+  ((key
+     :accessor key
+     :initform 0)))
+
+
+(defmethod pop-head ((instance list-key-value-iterator) &optional index)
+  (with-slots (head-cons key)
+              instance
+    (cond
+      ((null head-cons)
+        (values nil nil))
+      ((eql 0 index)
+        (multiple-value-prog1
+          (values key t)
+          (pop head-cons)
+          (incf key)))
+      ((eql 1 index)
+        (multiple-value-prog1
+          (values (pop head-cons) t)
+          (incf key)))
+      (t
+        (multiple-value-prog1
+          (values (list key (pop head-cons)) t)
+          (incf key))))))
+
+
+(defmethod head ((instance list-key-value-iterator) &optional index)
+  (with-slots (head-cons key)
+              instance
+    (cond
+      ((null head-cons)
+        (values nil nil))
+      ((eql 0 index)
+        (values key t))
+      ((eql 1 index)
+        (values (car head-cons) t))
+      (t
+        (values (list key (car head-cons)) t)))))
+
+
+(defmethod (setf head) (new-value (instance list-key-value-iterator) &optional index)
+  (with-slots (head-cons)
+              instance
+    (unless head-cons
+      (error "iterator is empty"))
+    (setf (car head-cons) new-value)))
+
+
+(defclass plist-value-iterator ()
   ((head-cons
      :accessor head-cons
      :initarg :head-cons
      :initform nil)))
 
 
-(defmethod pop-head ((instance plist-iterator) &optional index)
+(defmethod pop-head ((instance plist-value-iterator) &optional index)
   (assert (or (null index)
               (eql 0 index)
               (eql 1 index))
@@ -65,7 +114,7 @@
         (values (cons (pop head-cons) (pop head-cons)) t)))))
 
 
-(defmethod head ((instance plist-iterator) &optional index)
+(defmethod head ((instance plist-value-iterator) &optional index)
   (assert (or (null index)
               (eql 0 index)
               (eql 1 index))
@@ -84,7 +133,7 @@
         (values (list (car head-cons) (cadr head-cons)) t)))))
 
 
-(defmethod (setf head) (new-value (instance plist-iterator) &optional index)
+(defmethod (setf head) (new-value (instance plist-value-iterator) &optional index)
   (assert (or (null index)
               (eql 0 index)
               (eql 1 index))
@@ -104,18 +153,18 @@
               (cadr head-cons) (cadr new-value))))))
 
 
-(defmethod emptyp ((instance plist-iterator))
+(defmethod emptyp ((instance plist-value-iterator))
   (null (head-cons instance)))
 
 
-(defclass alist-iterator ()
+(defclass alist-value-iterator ()
   ((head-cons
      :accessor head-cons
      :initarg :head-cons
      :initform nil)))
 
 
-(defmethod pop-head ((instance alist-iterator) &optional index)
+(defmethod pop-head ((instance alist-value-iterator) &optional index)
   (assert (or (null index)
               (eql 0 index)
               (eql 1 index))
@@ -136,7 +185,7 @@
           (pop head-cons))))))
 
 
-(defmethod head ((instance alist-iterator) &optional index)
+(defmethod head ((instance alist-value-iterator) &optional index)
   (assert (or (null index)
               (eql 0 index)
               (eql 1 index))
@@ -155,7 +204,7 @@
         (values (list (caar head-cons) (cdar head-cons)) t)))))
 
 
-(defmethod (setf head) (new-value (instance alist-iterator) &optional index)
+(defmethod (setf head) (new-value (instance alist-value-iterator) &optional index)
   (assert (or (null index)
               (eql 0 index)
               (eql 1 index))
@@ -174,19 +223,23 @@
         (setf (car head-cons) (cons (car new-value) (cadr new-value)))))))
 
 
-(defmethod emptyp ((instance alist-iterator))
+(defmethod emptyp ((instance alist-value-iterator))
   (null (head-cons instance)))
 
 
-(defmethod make-iterator ((instance list) (type (eql :list)))
-  (make-instance 'list-iterator :head-cons instance))
+(defmethod make-iterator ((instance list) (type (eql :value)))
+  (make-instance 'list-value-iterator :head-cons instance))
 
 
-(defmethod make-iterator ((instance list) (type (eql :alist)))
-  (make-instance 'alist-iterator :head-cons instance))
+(defmethod make-iterator ((instance list) (type (eql :key-value)))
+  (make-instance 'list-key-value-iterator :head-cons instance))
 
 
-(defmethod make-iterator ((instance list) (type (eql :plist)))
-  (make-instance 'plist-iterator :head-cons instance))
+(defmethod make-iterator ((instance list) (type (eql :alist-key-value)))
+  (make-instance 'alist-value-iterator :head-cons instance))
+
+
+(defmethod make-iterator ((instance list) (type (eql :plist-key-value)))
+  (make-instance 'plist-value-iterator :head-cons instance))
 
 

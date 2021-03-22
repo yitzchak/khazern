@@ -5,7 +5,7 @@
 Iterate over a list but terminate as soon as the item is equal to 3.
 
 ```
-* (do! ((a '(1 2 3 4) :list))
+* (do! ((a '(1 2 3 4) :value))
        ((eql a 3) a)
     (format t "value: ~a~%" a))
 value: 1
@@ -17,7 +17,7 @@ T
 Iterate over a plist with no termination test beyond the automatic list end.
 
 ```
-* (do! (((k v) '(:fu 1 :bar 2 :wibble 3) :plist))
+* (do! (((k v) '(:fu 1 :bar 2 :wibble 3) :plist-key-value))
        ()
     (format t "key: ~a, value: ~a~%" k v))
 key: FU, value: 1
@@ -29,7 +29,7 @@ NIL
 Iterate over an alist with no termination test beyond the automatic list end.
 
 ```
-* (do! (((k v) '((:fu . 1) (:bar . 2) (:wibble . 3)) :alist))
+* (do! (((k v) '((:fu . 1) (:bar . 2) (:wibble . 3)) :alist-key-value))
        ()
     (format t "key: ~a, value: ~a~%" k v))
 key: FU, value: 1
@@ -43,7 +43,7 @@ Iterate over a plist and set one of the values.
 ```
 * (defparameter a `(:fu 1 :bar 2 :wibble 3))
 A
-* (do! (((k v) a :plist))
+* (do! (((k v) a :plist-key-value))
        ()
     (format t "Initial key: ~a, value: ~a~%" k v)
     (when (eq k :bar)
@@ -107,8 +107,8 @@ T
 Use multiple value binding in a normal `do` declaration.
 
 ```
-* (do!* ((n '(10 37 743) :list)
-         (d '(4   8  23) :list)
+* (do!* ((n '(10 37 743) :value)
+         (d '(4   8  23) :value)
          ((q r) (when n (floor n d)) (when n (floor n d))))
         ()
     (format t "(floor ~a ~a) => (~a ~a)~%" n d q r))
